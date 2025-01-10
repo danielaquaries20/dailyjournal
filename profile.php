@@ -1,13 +1,43 @@
 <?php
 include "koneksi.php";
 ?>
-<div class="container">
+<div class="container" id="profile_data">
     <!-- Form Update User -->
+    <?php
+    if (isset($_SESSION['username'])) {
+        $username = $_SESSION['username'];
+
+        // Query untuk mengambil data user
+        $sql = "SELECT * FROM user_web WHERE username = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+
+            // Tampilkan data user
+            // echo "ID: " . $user['id'] . "<br>";
+            // echo "Username: " . $user['username'] . "<br>";
+            // echo "Password: " . $user['password'] . "<br>";
+            // echo "Foto: " . $user['foto'] . "<br>";
+        } else {
+            echo "User tidak ditemukan.";
+        }
+    } else {
+        echo "Anda belum login.";
+    }
+    ?>
     <form method="post" action="" enctype="multipart/form-data">
+
         <div class="modal-body">
             <div class="mb-3">
+                <input type="hidden" name="id" value="<?= $user['id'] ?>">
+            </div>
+            <div class="mb-3">
                 <label for="formGroupExampleInput" class="form-label">Ganti Password</label>
-                <input type="text" class="form-control" name="judul" placeholder="Tuliskan Password Baru" required>
+                <input type="text" class="form-control" name="password" placeholder="Tuliskan Password Baru" required>
             </div>
             <div class="mb-3">
                 <label for="formGroupExampleInput2" class="form-label">Gambar</label>
@@ -17,15 +47,15 @@ include "koneksi.php";
         <div class="mb-3">
             <label for="formGroupExampleInput3" class="form-label">Foto Profile saat ini</label>
             <?php
-            if ($row["gambar"] != '') {
-                if (file_exists('img/' . $row["gambar"] . '')) {
+            if ($user["foto"] != '') {
+                if (file_exists('img/' . $user["foto"] . '')) {
                     ?>
-                    <br><img src="img/<?= $row["gambar"] ?>" width="100">
+                    <br><img src="img/<?= $user["foto"] ?>" width="100">
                     <?php
                 }
             }
             ?>
-            <input type="hidden" name="gambar_lama" value="<?= $row["gambar"] ?>">
+            <input type="hidden" name="gambar_lama" value="<?= $user["foto"] ?>">
         </div>
         <div class="modal-footer">
 
@@ -35,37 +65,14 @@ include "koneksi.php";
 
 </div>
 
-<script>
-    $(document).ready(function () {
-        load_data();
-        function load_data(hlm) {
-            $.ajax({
-                url: "profile_data.php",
-                method: "POST",
-                data: {
-                    hlm: hlm
-                },
-                success: function (data) {
-                    $('#profile_data').html(data);
-                }
-            })
-        }
-
-        $(document).on('click', '.halaman', function () {
-            var hlm = $(this).attr("id");
-            load_data(hlm);
-        });
-    });
-</script>
-
 <?php
 include "upload_foto.php";
 
 //jika tombol simpan diklik
 if (isset($_POST['simpan'])) {
+
+    $password = md5($_POST['password']);
     $gambar = '';
-    $username = $_SESSION['username'];
-    $tanggal = date("Y-m-d H:i:s");
     $nama_gambar = $_FILES['gambar']['name'];
 
     //upload gambar
@@ -95,64 +102,25 @@ if (isset($_POST['simpan'])) {
             unlink("img/" . $_POST['gambar_lama']);
         }
 
-        $stmt = $conn->prepare("UPDATE galerry 
+        $stmt = $conn->prepare("UPDATE user_web 
                                 SET                                 
-                                gambar = ?,
-                                username = ?,
-                                tanggal = ?                                
+                                password = ?,
+                                foto = ?                            
                                 WHERE id = ?");
 
-        $stmt->bind_param("sssi", $gambar, $username, $tanggal, $id);
-        $simpan = $stmt->execute();
-    } else {
-        //insert data
-        $stmt = $conn->prepare("INSERT INTO galerry (gambar,username,tanggal)
-                                VALUES (?,?,?)");
-
-        $stmt->bind_param("sss", $gambar, $username, $tanggal);
+        $stmt->bind_param("ssi", $password, $gambar, $id);
         $simpan = $stmt->execute();
     }
 
     if ($simpan) {
         echo "<script>
             alert('Simpan data sukses');
-            document.location='admin.php?page=gallery';
+            document.location='admin.php?page=profile';
         </script>";
     } else {
         echo "<script>
             alert('Simpan data gagal');
-            document.location='admin.php?page=gallery';
-        </script>";
-    }
-
-    $stmt->close();
-    $conn->close();
-}
-
-//jika tombol hapus diklik
-if (isset($_POST['hapus'])) {
-    $id = $_POST['id'];
-    $gambar = $_POST['gambar'];
-
-    if ($gambar != '') {
-        //hapus file gambar
-        unlink("img/" . $gambar);
-    }
-
-    $stmt = $conn->prepare("DELETE FROM galerry WHERE id =?");
-
-    $stmt->bind_param("i", $id);
-    $hapus = $stmt->execute();
-
-    if ($hapus) {
-        echo "<script>
-            alert('Hapus data sukses');
-            document.location='admin.php?page=gallery';
-        </script>";
-    } else {
-        echo "<script>
-            alert('Hapus data gagal');
-            document.location='admin.php?page=gallery';
+            document.location='admin.php?page=profile';
         </script>";
     }
 
