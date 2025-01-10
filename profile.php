@@ -4,13 +4,14 @@ include "koneksi.php";
 <div class="container" id="profile_data">
     <!-- Form Update User -->
     <?php
-    if (isset($_SESSION['username'])) {
-        $username = $_SESSION['username'];
+    if (isset($_SESSION['id'])) {
+        $id = $_SESSION['id'];
+        // echo "IdNow: " . $id . "<br>";
 
         // Query untuk mengambil data user
-        $sql = "SELECT * FROM user_web WHERE username = ?";
+        $sql = "SELECT * FROM user_web WHERE id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $username);
+        $stmt->bind_param("i", $id);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -37,7 +38,7 @@ include "koneksi.php";
             </div>
             <div class="mb-3">
                 <label for="formGroupExampleInput" class="form-label">Ganti Password</label>
-                <input type="text" class="form-control" name="password" placeholder="Tuliskan Password Baru" required>
+                <input type="password" class="form-control" name="password" placeholder="Tuliskan Password Baru" required>
             </div>
             <div class="mb-3">
                 <label for="formGroupExampleInput2" class="form-label">Gambar</label>

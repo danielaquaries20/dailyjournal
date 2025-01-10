@@ -17,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = md5($_POST['password']);
 
     //prepared statement
-    $stmt = $conn->prepare("SELECT username 
+    $stmt = $conn->prepare("SELECT * 
                           FROM user_web 
                           WHERE username=? AND password=?");
 
@@ -37,6 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!empty($row)) {
         //jika ada, simpan variable username pada session
         $_SESSION['username'] = $row['username'];
+        $_SESSION['id'] = $row['id'];
 
         //mengalihkan ke halaman admin
         header("location:admin.php");
